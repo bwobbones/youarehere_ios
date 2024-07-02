@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0627820C2C31FA5E002B662C /* CarPlay.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0627820B2C31FA5E002B662C /* CarPlay.framework */; };
+		062782142C3308EF002B662C /* CarPlaySceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 062782132C3308EF002B662C /* CarPlaySceneDelegate.swift */; };
+		062782162C3442EC002B662C /* CarPlayContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 062782152C3442EC002B662C /* CarPlayContentView.swift */; };
 		06E2841E2C2C6B8D002A1986 /* youarehere_iosApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06E2841D2C2C6B8D002A1986 /* youarehere_iosApp.swift */; };
 		06E284202C2C6B8D002A1986 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06E2841F2C2C6B8D002A1986 /* ContentView.swift */; };
 		06E284222C2C6B8E002A1986 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 06E284212C2C6B8E002A1986 /* Assets.xcassets */; };
@@ -20,6 +23,11 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		0627820B2C31FA5E002B662C /* CarPlay.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CarPlay.framework; path = System/Library/Frameworks/CarPlay.framework; sourceTree = SDKROOT; };
+		0627820D2C3252B2002B662C /* youarehere-ios.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "youarehere-ios.entitlements"; sourceTree = "<group>"; };
+		062782122C32706B002B662C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		062782132C3308EF002B662C /* CarPlaySceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarPlaySceneDelegate.swift; sourceTree = "<group>"; };
+		062782152C3442EC002B662C /* CarPlayContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarPlayContentView.swift; sourceTree = "<group>"; };
 		06E2841A2C2C6B8D002A1986 /* youarehere-ios.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "youarehere-ios.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		06E2841D2C2C6B8D002A1986 /* youarehere_iosApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = youarehere_iosApp.swift; sourceTree = "<group>"; };
 		06E2841F2C2C6B8D002A1986 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -38,17 +46,27 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0627820C2C31FA5E002B662C /* CarPlay.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0627820A2C31FA5E002B662C /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				0627820B2C31FA5E002B662C /* CarPlay.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		06E284112C2C6B8D002A1986 = {
 			isa = PBXGroup;
 			children = (
 				06E2841C2C2C6B8D002A1986 /* youarehere-ios */,
 				06E2841B2C2C6B8D002A1986 /* Products */,
+				0627820A2C31FA5E002B662C /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -63,6 +81,8 @@
 		06E2841C2C2C6B8D002A1986 /* youarehere-ios */ = {
 			isa = PBXGroup;
 			children = (
+				062782122C32706B002B662C /* Info.plist */,
+				0627820D2C3252B2002B662C /* youarehere-ios.entitlements */,
 				06E2841D2C2C6B8D002A1986 /* youarehere_iosApp.swift */,
 				06E284362C2DB084002A1986 /* Views */,
 				06E284212C2C6B8E002A1986 /* Assets.xcassets */,
@@ -88,6 +108,8 @@
 				06E2842B2C2C6E66002A1986 /* CircleImage.swift */,
 				06E284392C2DB142002A1986 /* LandmarkRow.swift */,
 				06E2842D2C2C6F27002A1986 /* MapView.swift */,
+				062782132C3308EF002B662C /* CarPlaySceneDelegate.swift */,
+				062782152C3442EC002B662C /* CarPlayContentView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -182,6 +204,8 @@
 			files = (
 				06E284202C2C6B8D002A1986 /* ContentView.swift in Sources */,
 				06E2842E2C2C6F27002A1986 /* MapView.swift in Sources */,
+				062782142C3308EF002B662C /* CarPlaySceneDelegate.swift in Sources */,
+				062782162C3442EC002B662C /* CarPlayContentView.swift in Sources */,
 				06E2841E2C2C6B8D002A1986 /* youarehere_iosApp.swift in Sources */,
 				06E2842C2C2C6E66002A1986 /* CircleImage.swift in Sources */,
 				06E284322C2DAE81002A1986 /* Landmark.swift in Sources */,
@@ -245,10 +269,14 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_KEY_NSNetworkVolumesUsageDescription = "";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = NO;
+				INFOPLIST_KEY_WKExtensionDelegateClassName = "";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.5;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
+				NEW_SETTING = "";
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
@@ -302,10 +330,14 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_KEY_NSNetworkVolumesUsageDescription = "";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = NO;
+				INFOPLIST_KEY_WKExtensionDelegateClassName = "";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.5;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
+				NEW_SETTING = "";
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				VALIDATE_PRODUCT = YES;
@@ -317,13 +349,15 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "youarehere-ios/youarehere-ios.entitlements";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"youarehere-ios/Preview Content\"";
 				DEVELOPMENT_TEAM = 3UVAFC82ET;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_FILE = "youarehere-ios/Info.plist";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -333,8 +367,9 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "au.com.resourcefulsoftware.whereami.youarehere-ios";
+				PRODUCT_BUNDLE_IDENTIFIER = com.youarehere;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -346,13 +381,15 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "youarehere-ios/youarehere-ios.entitlements";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"youarehere-ios/Preview Content\"";
 				DEVELOPMENT_TEAM = 3UVAFC82ET;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_FILE = "youarehere-ios/Info.plist";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -362,8 +399,9 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "au.com.resourcefulsoftware.whereami.youarehere-ios";
+				PRODUCT_BUNDLE_IDENTIFIER = com.youarehere;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
