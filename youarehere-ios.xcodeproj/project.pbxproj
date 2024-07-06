@@ -10,6 +10,7 @@
 		0627820C2C31FA5E002B662C /* CarPlay.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0627820B2C31FA5E002B662C /* CarPlay.framework */; };
 		062782142C3308EF002B662C /* CarPlaySceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 062782132C3308EF002B662C /* CarPlaySceneDelegate.swift */; };
 		062782162C3442EC002B662C /* CarPlayContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 062782152C3442EC002B662C /* CarPlayContentView.swift */; };
+		062782212C38479D002B662C /* LocationProvider in Frameworks */ = {isa = PBXBuildFile; productRef = 062782202C38479D002B662C /* LocationProvider */; };
 		06E2841E2C2C6B8D002A1986 /* youarehere_iosApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06E2841D2C2C6B8D002A1986 /* youarehere_iosApp.swift */; };
 		06E284202C2C6B8D002A1986 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06E2841F2C2C6B8D002A1986 /* ContentView.swift */; };
 		06E284222C2C6B8E002A1986 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 06E284212C2C6B8E002A1986 /* Assets.xcassets */; };
@@ -46,6 +47,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				062782212C38479D002B662C /* LocationProvider in Frameworks */,
 				0627820C2C31FA5E002B662C /* CarPlay.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -163,6 +165,9 @@
 			dependencies = (
 			);
 			name = "youarehere-ios";
+			packageProductDependencies = (
+				062782202C38479D002B662C /* LocationProvider */,
+			);
 			productName = "youarehere-ios";
 			productReference = 06E2841A2C2C6B8D002A1986 /* youarehere-ios.app */;
 			productType = "com.apple.product-type.application";
@@ -191,6 +196,9 @@
 				Base,
 			);
 			mainGroup = 06E284112C2C6B8D002A1986;
+			packageReferences = (
+				0627821F2C38479D002B662C /* XCRemoteSwiftPackageReference "LocationProvider" */,
+			);
 			productRefGroup = 06E2841B2C2C6B8D002A1986 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -446,6 +454,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		0627821F2C38479D002B662C /* XCRemoteSwiftPackageReference "LocationProvider" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/himbeles/LocationProvider";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.2.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		062782202C38479D002B662C /* LocationProvider */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0627821F2C38479D002B662C /* XCRemoteSwiftPackageReference "LocationProvider" */;
+			productName = LocationProvider;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 06E284122C2C6B8D002A1986 /* Project object */;
 }

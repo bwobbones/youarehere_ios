@@ -6,8 +6,23 @@
 //
 
 import SwiftUI
+import LocationProvider
 
 struct ContentView: View {
+    
+    @ObservedObject var locationProvider : LocationProvider
+    
+    init() {
+        locationProvider = LocationProvider()
+        do {try locationProvider.start()}
+        catch {
+            print("No location access.")
+            locationProvider.requestAuthorization()
+        }
+        
+        print("i this iiiii")
+    }
+    
     var body: some View {
         VStack {
             MapView()
@@ -33,7 +48,10 @@ struct ContentView: View {
                 
                 Text("About Turtle Rock")
                     .font(.title2)
-                Text("Descriptive text goes here.")
+                Text("latitude \(locationProvider.location?.coordinate.latitude ?? 0)")
+                    .accessibility(identifier: "latLabel")
+                Text("longitude \(locationProvider.location?.coordinate.longitude ?? 0)")
+                    .accessibility(identifier: "longLabel")
             }
             .padding()
             
