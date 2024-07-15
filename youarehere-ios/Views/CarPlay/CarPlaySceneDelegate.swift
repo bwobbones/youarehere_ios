@@ -13,7 +13,7 @@ class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegate {
     
     func templateApplicationScene(_ templateApplicationScene: CPTemplateApplicationScene, didConnect interfaceController: CPInterfaceController) {    
         self.interfaceController = interfaceController
-        self.interfaceController?.setRootTemplate(CarPlayHelloWorld().template, animated: false, completion: nil)
+        self.interfaceController?.setRootTemplate(CarPlayContentView(ic: interfaceController).template, animated: false, completion: nil)
     }
     
     private func templateApplicationScene(_ templateApplicationScene: CPTemplateApplicationScene, didDisconnect interfaceController: CPInterfaceController) {

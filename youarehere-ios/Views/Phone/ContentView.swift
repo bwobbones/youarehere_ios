@@ -12,16 +12,14 @@ struct ContentView: View {
     
     @ObservedObject var locationProvider : LocationProvider
     
-    init() {
-        locationProvider = LocationProvider()
-        do {try locationProvider.start()}
-        catch {
-            print("No location access.")
-            locationProvider.requestAuthorization()
-        }
-        
-        print("i this iiiii")
-    }
+     init() {
+         locationProvider = LocationProvider()
+         do {try locationProvider.start()}
+         catch {
+             print("No location access.")
+             locationProvider.requestAuthorization()
+         }
+     }
     
     var body: some View {
         VStack {
