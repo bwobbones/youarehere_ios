@@ -19,13 +19,11 @@
 	</dict>
 	<key>UIBackgroundModes</key>
 	<array>
-		<string>location</string>
+		<string>audio</string>
 	</array>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>This is why location access is needed.</string>
-	<key>NSLocationAlwaysUsageDescription</key>
-	<string>This is why location access is needed.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>This is why location access is needed.</string>
+	<string>This app needs your location to show your position.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>This app needs your location to show your position even in the background.</string>
 </dict>
 </plist>

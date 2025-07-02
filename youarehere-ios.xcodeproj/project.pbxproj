@@ -10,7 +10,7 @@
 		0627820C2C31FA5E002B662C /* CarPlay.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0627820B2C31FA5E002B662C /* CarPlay.framework */; };
 		062782142C3308EF002B662C /* CarPlaySceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 062782132C3308EF002B662C /* CarPlaySceneDelegate.swift */; };
 		062782162C3442EC002B662C /* CarPlayContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 062782152C3442EC002B662C /* CarPlayContentView.swift */; };
-		062782212C38479D002B662C /* LocationProvider in Frameworks */ = {isa = PBXBuildFile; productRef = 062782202C38479D002B662C /* LocationProvider */; };
+		062782252C568707002B662C /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 062782242C568707002B662C /* AudioManager.swift */; };
 		06E2841E2C2C6B8D002A1986 /* youarehere_iosApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06E2841D2C2C6B8D002A1986 /* youarehere_iosApp.swift */; };
 		06E284202C2C6B8D002A1986 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06E2841F2C2C6B8D002A1986 /* ContentView.swift */; };
 		06E284222C2C6B8E002A1986 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 06E284212C2C6B8E002A1986 /* Assets.xcassets */; };
@@ -29,6 +29,7 @@
 		062782122C32706B002B662C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		062782132C3308EF002B662C /* CarPlaySceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarPlaySceneDelegate.swift; sourceTree = "<group>"; };
 		062782152C3442EC002B662C /* CarPlayContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarPlayContentView.swift; sourceTree = "<group>"; };
+		062782242C568707002B662C /* AudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
 		06E2841A2C2C6B8D002A1986 /* youarehere-ios.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "youarehere-ios.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		06E2841D2C2C6B8D002A1986 /* youarehere_iosApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = youarehere_iosApp.swift; sourceTree = "<group>"; };
 		06E2841F2C2C6B8D002A1986 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -47,7 +48,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				062782212C38479D002B662C /* LocationProvider in Frameworks */,
 				0627820C2C31FA5E002B662C /* CarPlay.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -67,6 +67,7 @@
 			isa = PBXGroup;
 			children = (
 				062782132C3308EF002B662C /* CarPlaySceneDelegate.swift */,
+				062782242C568707002B662C /* AudioManager.swift */,
 				062782152C3442EC002B662C /* CarPlayContentView.swift */,
 			);
 			path = CarPlay;
@@ -166,7 +167,6 @@
 			);
 			name = "youarehere-ios";
 			packageProductDependencies = (
-				062782202C38479D002B662C /* LocationProvider */,
 			);
 			productName = "youarehere-ios";
 			productReference = 06E2841A2C2C6B8D002A1986 /* youarehere-ios.app */;
@@ -197,7 +197,6 @@
 			);
 			mainGroup = 06E284112C2C6B8D002A1986;
 			packageReferences = (
-				0627821F2C38479D002B662C /* XCRemoteSwiftPackageReference "LocationProvider" */,
 			);
 			productRefGroup = 06E2841B2C2C6B8D002A1986 /* Products */;
 			projectDirPath = "";
@@ -234,6 +233,7 @@
 				06E2842C2C2C6E66002A1986 /* CircleImage.swift in Sources */,
 				06E284322C2DAE81002A1986 /* Landmark.swift in Sources */,
 				06E2843A2C2DB142002A1986 /* LandmarkRow.swift in Sources */,
+				062782252C568707002B662C /* AudioManager.swift in Sources */,
 				06E284342C2DAFD3002A1986 /* ModelData.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -382,10 +382,15 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "youarehere-ios/Info.plist";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "This is why location access is needed.";
+				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "This is why location access is needed.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "This is why location access is needed.";
+				INFOPLIST_KEY_NSNetworkVolumesUsageDescription = "";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_WKExtensionDelegateClassName = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -414,10 +419,15 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "youarehere-ios/Info.plist";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "This is why location access is needed.";
+				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "This is why location access is needed.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "This is why location access is needed.";
+				INFOPLIST_KEY_NSNetworkVolumesUsageDescription = "";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_WKExtensionDelegateClassName = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -454,25 +464,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		0627821F2C38479D002B662C /* XCRemoteSwiftPackageReference "LocationProvider" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/himbeles/LocationProvider";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.2.0;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		062782202C38479D002B662C /* LocationProvider */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 0627821F2C38479D002B662C /* XCRemoteSwiftPackageReference "LocationProvider" */;
-			productName = LocationProvider;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 06E284122C2C6B8D002A1986 /* Project object */;
 }

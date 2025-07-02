@@ -7,57 +7,61 @@
 
 import Foundation
 import CarPlay
-import LocationProvider
 import Combine
+import AVFoundation
+import UIKit
+import CoreLocation
 
-class CarPlayContentView {
+class CarPlayContentView: NSObject {
     
-    var cancellableLocation: AnyCancellable?
-    var locationProvider: LocationProvider = LocationProvider()
     var ic: CPInterfaceController?
-    
-    var loc2: CLLocation?
+    let locationManager = CLLocationManager()
     
     init(ic: CPInterfaceController) {
-        
-        print("initing")
-        print(self.locationProvider)
-         
-        do {try locationProvider.start()}
-        catch {
-            print("No location access.")
-            locationProvider.requestAuthorization()
-        }
-        setupSink()
-        
         self.ic = ic
+        super.init()
+        locationManager.delegate = self
+        presentGridTemplate()
     }
     
-    func setupSink() {
-        cancellableLocation = locationProvider.locationWillChange.sink { loc in
-            self.loc2 = loc
-            self.ic?.setRootTemplate(self.regenerateTemplate(), animated: true, completion:nil)
+    func presentGridTemplate() {
+        let button = CPGridButton(titleVariants: ["Get Location"], image: UIImage(systemName: "location.circle")!) { [weak self] _ in
+            self?.fetchAndShowLocation()
         }
+        let gridTemplate = CPGridTemplate(title: "You Are Here", gridButtons: [button])
+        ic?.setRootTemplate(gridTemplate, animated: true, completion: nil)
+        }
+    
+    func fetchAndShowLocation() {
+        locationManager.delegate = self
+        locationManager.requestWhenInUseAuthorization()
+        locationManager.requestLocation()
     }
+}
 
-    private func regenerateTemplate() -> CPListTemplate {
-        print("rebuilding...")
-        let newItems: [CPListItem] = [CPListItem(text:"Hello world", detailText: String(loc2?.coordinate.latitude ?? 0.0), image: UIImage(systemName: "globe"))]
-        let section: CPListSection = CPListSection(items: newItems)
-        return CPListTemplate(title: String(loc2?.coordinate.latitude ?? 0.0), sections: [section])
+extension CarPlayContentView: CLLocationManagerDelegate {
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        print("didUpdateLocations called with: \(locations)")
+        guard let loc = locations.last else { return }
+        let lat = loc.coordinate.latitude
+        let lon = loc.coordinate.longitude
+        let info = "Lat: \(lat)\nLon: \(lon)"
+        let alert = CPAlertTemplate(titleVariants: ["Current Location"], actions: [
+            CPAlertAction(title: "OK", style: .default, handler: { [weak self] _ in
+                self?.presentGridTemplate()
+            })
+        ])
+        ic?.presentTemplate(alert, animated: true, completion: nil)
+        locationManager.stopUpdatingLocation()
     }
     
-    
-    
-    var template: CPListTemplate {
-        return CPListTemplate(title: "Hello world", sections: [self.section])
-    }
-    
-    var items: [CPListItem] {
-        return [CPListItem(text:"Hello world", detailText: String(loc2?.coordinate.latitude ?? 0.0), image: UIImage(systemName: "globe"))]
-    }
-    
-    private var section: CPListSection {
-        return CPListSection(items: items)
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        print("didFailWithError: \(error)")
+        let alert = CPAlertTemplate(titleVariants: ["Location Error"], actions: [
+            CPAlertAction(title: "OK", style: .default, handler: { [weak self] _ in
+                self?.presentGridTemplate()
+            })
+        ])
+        ic?.presentTemplate(alert, animated: true, completion: nil)
     }
 }

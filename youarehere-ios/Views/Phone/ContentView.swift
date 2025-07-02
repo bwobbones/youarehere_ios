@@ -6,54 +6,69 @@
 //
 
 import SwiftUI
-import LocationProvider
+import CoreLocation
+
+class IdentifiableError: Identifiable {
+    let id = UUID()
+    let error: Error
+    init(_ error: Error) { self.error = error }
+}
+
+class LocationManagerDelegateWrapper: NSObject, ObservableObject, CLLocationManagerDelegate {
+    let locationManager = CLLocationManager()
+    @Published var lastLocation: CLLocation?
+    @Published var error: IdentifiableError?
+
+    override init() {
+        super.init()
+        locationManager.delegate = self
+    }
+
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        print("didUpdateLocations called with: \(locations)")
+        lastLocation = locations.last
+    }
+
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        print("didFailWithError: \(error)")
+        self.error = IdentifiableError(error)
+    }
+}
 
 struct ContentView: View {
-    
-    @ObservedObject var locationProvider : LocationProvider
-    
-     init() {
-         locationProvider = LocationProvider()
-         do {try locationProvider.start()}
-         catch {
-             print("No location access.")
-             locationProvider.requestAuthorization()
-         }
-     }
+    @StateObject private var locationManagerDelegate = LocationManagerDelegateWrapper()
     
     var body: some View {
         VStack {
-            MapView()
-                .frame(height: 300)
-            
-            CircleImage()
-                .offset(y: -130)
-                .padding(.bottom, -130)
-            
-            VStack(alignment: .leading) {
-                Text("Turtle Rock")
-                    .font(.title)
-                    .foregroundColor(.black)
-                HStack {
-                    Text("Joshua Tree National Park")
-                        .font(.subheadline)
-                    Spacer()
-                    Text("California")
-                        .font(.subheadline)
-                }
-                
-                Divider()
-                
-                Text("About Turtle Rock")
-                    .font(.title2)
-                Text("latitude \(locationProvider.location?.coordinate.latitude ?? 0)")
-                    .accessibility(identifier: "latLabel")
-                Text("longitude \(locationProvider.location?.coordinate.longitude ?? 0)")
-                    .accessibility(identifier: "longLabel")
-            }
-            .padding()
-            
             Spacer()
+            Button(action: {
+                locationManagerDelegate.locationManager.requestWhenInUseAuthorization()
+                locationManagerDelegate.locationManager.requestLocation()
+            }) {
+                Text("Get Location")
+                    .font(.largeTitle)
+                    .frame(maxWidth: .infinity, minHeight: 80)
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(20)
+                    .padding()
+            }
+            .accessibility(identifier: "getLocationButton")
+            
+            if let loc = locationManagerDelegate.lastLocation {
+                Text("Latitude: \(loc.coordinate.latitude)")
+                    .font(.title2)
+                    .accessibility(identifier: "latLabel")
+                Text("Longitude: \(loc.coordinate.longitude)")
+                    .font(.title2)
+                    .accessibility(identifier: "longLabel")
+            } else {
+                Text("No location yet.")
+            }
+            Spacer()
+        }
+        .alert(item: $locationManagerDelegate.error) { identifiableError in
+            Alert(title: Text("Location Error"), message: Text(identifiableError.error.localizedDescription), dismissButton: .default(Text("OK")))
         }
     }
 }
