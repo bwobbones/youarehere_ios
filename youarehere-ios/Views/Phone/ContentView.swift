@@ -18,6 +18,7 @@ class LocationManagerDelegateWrapper: NSObject, ObservableObject, CLLocationMana
     let locationManager = CLLocationManager()
     @Published var lastLocation: CLLocation?
     @Published var error: IdentifiableError?
+    @Published var placeString: String? = nil
 
     override init() {
         super.init()
@@ -27,6 +28,24 @@ class LocationManagerDelegateWrapper: NSObject, ObservableObject, CLLocationMana
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         print("didUpdateLocations called with: \(locations)")
         lastLocation = locations.last
+        if let loc = locations.last {
+            let geocoder = CLGeocoder()
+            geocoder.reverseGeocodeLocation(loc) { [weak self] placemarks, error in
+                if let error = error {
+                    print("Reverse geocoding failed: \(error)")
+                    self?.placeString = nil
+                    return
+                }
+                if let placemark = placemarks?.first {
+                    let place = [placemark.name, placemark.locality, placemark.country].compactMap { $0 }.joined(separator: ", ")
+                    print("Placemark: \(place)")
+                    self?.placeString = place
+                } else {
+                    print("No placemark found")
+                    self?.placeString = nil
+                }
+            }
+        }
     }
 
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
@@ -55,15 +74,12 @@ struct ContentView: View {
             }
             .accessibility(identifier: "getLocationButton")
             
-            if let loc = locationManagerDelegate.lastLocation {
-                Text("Latitude: \(loc.coordinate.latitude)")
+            if let place = locationManagerDelegate.placeString {
+                Text(place)
                     .font(.title2)
-                    .accessibility(identifier: "latLabel")
-                Text("Longitude: \(loc.coordinate.longitude)")
-                    .font(.title2)
-                    .accessibility(identifier: "longLabel")
+                    .accessibility(identifier: "placeLabel")
             } else {
-                Text("No location yet.")
+                Text("No place yet.")
             }
             Spacer()
         }

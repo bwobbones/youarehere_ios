@@ -43,15 +43,31 @@ extension CarPlayContentView: CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         print("didUpdateLocations called with: \(locations)")
         guard let loc = locations.last else { return }
-        let lat = loc.coordinate.latitude
-        let lon = loc.coordinate.longitude
-        let info = "Lat: \(lat)\nLon: \(lon)"
-        let alert = CPAlertTemplate(titleVariants: ["Current Location"], actions: [
-            CPAlertAction(title: "OK", style: .default, handler: { [weak self] _ in
-                self?.presentGridTemplate()
-            })
-        ])
-        ic?.presentTemplate(alert, animated: true, completion: nil)
+        let geocoder = CLGeocoder()
+        geocoder.reverseGeocodeLocation(loc) { [weak self] placemarks, error in
+            if let error = error {
+                print("Reverse geocoding failed: \(error)")
+                return
+            }
+            if let placemark = placemarks?.first {
+                let placeString = [placemark.name, placemark.locality, placemark.country].compactMap { $0 }.joined(separator: ", ")
+                print("Placemark: \(placeString)")
+                let alert = CPAlertTemplate(titleVariants: [placeString], actions: [
+                    CPAlertAction(title: "OK", style: .default, handler: { [weak self] _ in
+                        self?.presentGridTemplate()
+                    })
+                ])
+                self?.ic?.presentTemplate(alert, animated: true, completion: nil)
+            } else {
+                print("No placemark found")
+                let alert = CPAlertTemplate(titleVariants: ["No place found"], actions: [
+                    CPAlertAction(title: "OK", style: .default, handler: { [weak self] _ in
+                        self?.presentGridTemplate()
+                    })
+                ])
+                self?.ic?.presentTemplate(alert, animated: true, completion: nil)
+            }
+        }
         locationManager.stopUpdatingLocation()
     }
     
