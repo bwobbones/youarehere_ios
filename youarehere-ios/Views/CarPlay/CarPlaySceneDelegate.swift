@@ -10,10 +10,11 @@ import CarPlay
 class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegate {
     
     var interfaceController: CPInterfaceController?
+    var carPlayContentView: CarPlayContentView?
     
     func templateApplicationScene(_ templateApplicationScene: CPTemplateApplicationScene, didConnect interfaceController: CPInterfaceController) {    
         self.interfaceController = interfaceController
-        _ = CarPlayContentView(ic: interfaceController)
+        self.carPlayContentView = CarPlayContentView(ic: interfaceController)
     }
     
     private func templateApplicationScene(_ templateApplicationScene: CPTemplateApplicationScene, didDisconnect interfaceController: CPInterfaceController) {

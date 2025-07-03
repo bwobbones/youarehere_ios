@@ -12,72 +12,84 @@ import AVFoundation
 import UIKit
 import CoreLocation
 
-class CarPlayContentView: NSObject {
+class CarPlayContentView: NSObject, CLLocationManagerDelegate {
     
     var ic: CPInterfaceController?
     let locationManager = CLLocationManager()
+    var placeString: String? = nil
+    var listTemplate: CPListTemplate?
+    var isLoading: Bool = false
     
     init(ic: CPInterfaceController) {
         self.ic = ic
         super.init()
         locationManager.delegate = self
-        presentGridTemplate()
+        presentListTemplate()
     }
     
-    func presentGridTemplate() {
-        let button = CPGridButton(titleVariants: ["Get Location"], image: UIImage(systemName: "location.circle")!) { [weak self] _ in
+    func presentListTemplate() {
+        let detail = isLoading ? "Getting location…" : (placeString ?? "No place yet.")
+        let item = CPListItem(text: "Get Location", detailText: detail)
+        item.handler = { [weak self] _, completion in
+            print("[CarPlay] Get Location row tapped")
             self?.fetchAndShowLocation()
+            completion()
         }
-        let gridTemplate = CPGridTemplate(title: "You Are Here", gridButtons: [button])
-        ic?.setRootTemplate(gridTemplate, animated: true, completion: nil)
-        }
+        let section = CPListSection(items: [item])
+        let template = CPListTemplate(title: "You Are Here", sections: [section])
+        self.listTemplate = template
+        ic?.setRootTemplate(template, animated: true, completion: nil)
+    }
     
     func fetchAndShowLocation() {
-        locationManager.delegate = self
+        print("[CarPlay] fetchAndShowLocation called")
+        print("[CarPlay] Requesting location authorization and location")
+        isLoading = true
+        updateListTemplate()
         locationManager.requestWhenInUseAuthorization()
         locationManager.requestLocation()
     }
-}
-
-extension CarPlayContentView: CLLocationManagerDelegate {
+    
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        print("didUpdateLocations called with: \(locations)")
+        print("[CarPlay] didUpdateLocations called with: \(locations)")
+        isLoading = false
         guard let loc = locations.last else { return }
         let geocoder = CLGeocoder()
         geocoder.reverseGeocodeLocation(loc) { [weak self] placemarks, error in
+            guard let self = self else { return }
             if let error = error {
-                print("Reverse geocoding failed: \(error)")
-                return
+                print("[CarPlay] Reverse geocoding failed: \(error)")
             }
             if let placemark = placemarks?.first {
-                let placeString = [placemark.name, placemark.locality, placemark.country].compactMap { $0 }.joined(separator: ", ")
-                print("Placemark: \(placeString)")
-                let alert = CPAlertTemplate(titleVariants: [placeString], actions: [
-                    CPAlertAction(title: "OK", style: .default, handler: { [weak self] _ in
-                        self?.presentGridTemplate()
-                    })
-                ])
-                self?.ic?.presentTemplate(alert, animated: true, completion: nil)
+                self.placeString = [placemark.name, placemark.locality, placemark.country].compactMap { $0 }.joined(separator: ", ")
+                print("[CarPlay] Placemark: \(self.placeString ?? "")")
             } else {
-                print("No placemark found")
-                let alert = CPAlertTemplate(titleVariants: ["No place found"], actions: [
-                    CPAlertAction(title: "OK", style: .default, handler: { [weak self] _ in
-                        self?.presentGridTemplate()
-                    })
-                ])
-                self?.ic?.presentTemplate(alert, animated: true, completion: nil)
+                self.placeString = "No place yet."
+                print("[CarPlay] No placemark found")
             }
+            self.updateListTemplate()
         }
-        locationManager.stopUpdatingLocation()
     }
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        print("didFailWithError: \(error)")
-        let alert = CPAlertTemplate(titleVariants: ["Location Error"], actions: [
-            CPAlertAction(title: "OK", style: .default, handler: { [weak self] _ in
-                self?.presentGridTemplate()
-            })
-        ])
-        ic?.presentTemplate(alert, animated: true, completion: nil)
+        print("[CarPlay] didFailWithError: \(error)")
+        isLoading = false
+        placeString = "No place yet."
+        updateListTemplate()
+    }
+    
+    func updateListTemplate() {
+        guard let ic = ic else { return }
+        let detail = isLoading ? "Getting location…" : (placeString ?? "No place yet.")
+        let item = CPListItem(text: "Get Location", detailText: detail)
+        item.handler = { [weak self] _, completion in
+            print("[CarPlay] Get Location row tapped (updateListTemplate)")
+            self?.fetchAndShowLocation()
+            completion()
+        }
+        let section = CPListSection(items: [item])
+        let template = CPListTemplate(title: "You Are Here", sections: [section])
+        self.listTemplate = template
+        ic.setRootTemplate(template, animated: false, completion: nil)
     }
 }
