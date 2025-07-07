@@ -12,17 +12,6 @@ import AVFoundation
 import UIKit
 import CoreLocation
 
-// Helper to load config values from Config.plist
-func loadConfigValue(_ key: String) -> String {
-    guard let url = Bundle.main.url(forResource: "Config", withExtension: "plist"),
-          let data = try? Data(contentsOf: url),
-          let plist = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil) as? [String: Any],
-          let value = plist[key] as? String else {
-        fatalError("Missing or invalid Config.plist value for \(key)")
-    }
-    return value
-}
-
 class CarPlayContentView: NSObject, CLLocationManagerDelegate, AVAudioPlayerDelegate {
     
     enum CarPlayUIState {
@@ -46,10 +35,10 @@ class CarPlayContentView: NSObject, CLLocationManagerDelegate, AVAudioPlayerDele
     var progressTimer: Timer?
     var uiState: CarPlayUIState = .idle { didSet { updateListTemplate() } }
     
-    static let proxyBaseURL = loadConfigValue("ProxyBaseURL")
+    static let proxyBaseURL = Config.proxyBaseURL
     static let claudeProxyURL = URL(string: "\(proxyBaseURL)/api/claude")!
     static let ttsProxyURL = URL(string: "\(proxyBaseURL)/api/tts")!
-    let claudeClientAPIKey = loadConfigValue("ClaudeClientAPIKey")
+    let claudeClientAPIKey = Config.claudeClientAPIKey
     
     init(ic: CPInterfaceController) {
         self.ic = ic

@@ -16,21 +16,10 @@ class IdentifiableError: Identifiable {
     init(_ error: Error) { self.error = error }
 }
 
-// Helper to load config values from Config.plist
-func loadConfigValue(_ key: String) -> String {
-    guard let url = Bundle.main.url(forResource: "Config", withExtension: "plist"),
-          let data = try? Data(contentsOf: url),
-          let plist = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil) as? [String: Any],
-          let value = plist[key] as? String else {
-        fatalError("Missing or invalid Config.plist value for \(key)")
-    }
-    return value
-}
-
-private let proxyBaseURL = loadConfigValue("ProxyBaseURL")
+private let proxyBaseURL = Config.proxyBaseURL
 private let claudeProxyURL = URL(string: "\(proxyBaseURL)/api/claude")!
 private let ttsProxyURL = URL(string: "\(proxyBaseURL)/api/tts")!
-let claudeClientAPIKey = loadConfigValue("ClaudeClientAPIKey")
+let claudeClientAPIKey = Config.claudeClientAPIKey
 
 enum PhoneUIState {
     case idle

@@ -11,6 +11,8 @@
 		062782142C3308EF002B662C /* CarPlaySceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 062782132C3308EF002B662C /* CarPlaySceneDelegate.swift */; };
 		062782162C3442EC002B662C /* CarPlayContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 062782152C3442EC002B662C /* CarPlayContentView.swift */; };
 		062782252C568707002B662C /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 062782242C568707002B662C /* AudioManager.swift */; };
+		06665B432E1C6608007371C0 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06665B422E1C6608007371C0 /* Config.swift */; };
+		06665B452E1C667D007371C0 /* Config.plist in Resources */ = {isa = PBXBuildFile; fileRef = 06665B442E1C667D007371C0 /* Config.plist */; };
 		06E2841E2C2C6B8D002A1986 /* youarehere_iosApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06E2841D2C2C6B8D002A1986 /* youarehere_iosApp.swift */; };
 		06E284202C2C6B8D002A1986 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06E2841F2C2C6B8D002A1986 /* ContentView.swift */; };
 		06E284222C2C6B8E002A1986 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 06E284212C2C6B8E002A1986 /* Assets.xcassets */; };
@@ -30,6 +32,8 @@
 		062782132C3308EF002B662C /* CarPlaySceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarPlaySceneDelegate.swift; sourceTree = "<group>"; };
 		062782152C3442EC002B662C /* CarPlayContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarPlayContentView.swift; sourceTree = "<group>"; };
 		062782242C568707002B662C /* AudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
+		06665B422E1C6608007371C0 /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
+		06665B442E1C667D007371C0 /* Config.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Config.plist; sourceTree = "<group>"; };
 		06E2841A2C2C6B8D002A1986 /* youarehere-ios.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "youarehere-ios.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		06E2841D2C2C6B8D002A1986 /* youarehere_iosApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = youarehere_iosApp.swift; sourceTree = "<group>"; };
 		06E2841F2C2C6B8D002A1986 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -104,6 +108,7 @@
 		06E2841C2C2C6B8D002A1986 /* youarehere-ios */ = {
 			isa = PBXGroup;
 			children = (
+				06665B442E1C667D007371C0 /* Config.plist */,
 				062782122C32706B002B662C /* Info.plist */,
 				0627820D2C3252B2002B662C /* youarehere-ios.entitlements */,
 				06E2841D2C2C6B8D002A1986 /* youarehere_iosApp.swift */,
@@ -127,6 +132,7 @@
 		06E284362C2DB084002A1986 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				06665B422E1C6608007371C0 /* Config.swift */,
 				062782182C359421002B662C /* Phone */,
 				062782172C35940C002B662C /* CarPlay */,
 			);
@@ -212,6 +218,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				06665B452E1C667D007371C0 /* Config.plist in Resources */,
 				06E284252C2C6B8E002A1986 /* Preview Assets.xcassets in Resources */,
 				06E284222C2C6B8E002A1986 /* Assets.xcassets in Resources */,
 				06E284302C2DAE3D002A1986 /* landmarkData.json in Resources */,
@@ -229,6 +236,7 @@
 				06E2842E2C2C6F27002A1986 /* MapView.swift in Sources */,
 				062782142C3308EF002B662C /* CarPlaySceneDelegate.swift in Sources */,
 				062782162C3442EC002B662C /* CarPlayContentView.swift in Sources */,
+				06665B432E1C6608007371C0 /* Config.swift in Sources */,
 				06E2841E2C2C6B8D002A1986 /* youarehere_iosApp.swift in Sources */,
 				06E2842C2C2C6E66002A1986 /* CircleImage.swift in Sources */,
 				06E284322C2DAE81002A1986 /* Landmark.swift in Sources */,
