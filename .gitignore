@@ -88,3 +88,21 @@ fastlane/test_output
 # https://github.com/johnno1962/injectionforxcode
 
 iOSInjectionProject/
+
+# macOS
+.DS_Store
+
+# Xcode
+*.xcuserdatad
+*.xcuserdata
+*.xcworkspace
+*.xcuserstate
+DerivedData/
+build/
+
+# Node/Vercel
+.vercel
+node_modules/
+
+# Local env files
+.env*

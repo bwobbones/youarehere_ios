@@ -12,20 +12,44 @@ import AVFoundation
 import UIKit
 import CoreLocation
 
-class CarPlayContentView: NSObject, CLLocationManagerDelegate {
+// Helper to load config values from Config.plist
+func loadConfigValue(_ key: String) -> String {
+    guard let url = Bundle.main.url(forResource: "Config", withExtension: "plist"),
+          let data = try? Data(contentsOf: url),
+          let plist = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil) as? [String: Any],
+          let value = plist[key] as? String else {
+        fatalError("Missing or invalid Config.plist value for \(key)")
+    }
+    return value
+}
+
+class CarPlayContentView: NSObject, CLLocationManagerDelegate, AVAudioPlayerDelegate {
     
-    var ic: CPInterfaceController?
+    enum CarPlayUIState {
+        case idle
+        case gettingLocation
+        case gotLocation(String)
+        case thinkingOfWhatToSay(String)
+        case playingAudio(String)
+        case error(String)
+    }
+    
+        var ic: CPInterfaceController?
     let locationManager = CLLocationManager()
-    var placeString: String? = nil
     var listTemplate: CPListTemplate?
     var isLoading: Bool = false
     var isPlaying = false
     var audioPlayer: AVAudioPlayer?
     var audioTask: URLSessionDataTask?
     var speechCancelled = false
+    var currentPlace: String? = nil
+    var progressTimer: Timer?
+    var uiState: CarPlayUIState = .idle { didSet { updateListTemplate() } }
     
-    let claudeProxyURL = URL(string: "https://claude-proxy-hfel3gev0-gregs-projects-58823ca2.vercel.app/api/claude")!
-    let claudeClientAPIKey = "sumpleriltskin"
+    static let proxyBaseURL = loadConfigValue("ProxyBaseURL")
+    static let claudeProxyURL = URL(string: "\(proxyBaseURL)/api/claude")!
+    static let ttsProxyURL = URL(string: "\(proxyBaseURL)/api/tts")!
+    let claudeClientAPIKey = loadConfigValue("ClaudeClientAPIKey")
     
     init(ic: CPInterfaceController) {
         self.ic = ic
@@ -37,68 +61,50 @@ class CarPlayContentView: NSObject, CLLocationManagerDelegate {
     }
     
     func presentListTemplate() {
-        let detail = isLoading ? "Getting location…" : (placeString ?? "No place yet.")
-        let item = CPListItem(text: "Get Location", detailText: detail)
-        item.handler = { [weak self] _, completion in
-            print("[CarPlay] Get Location row tapped")
-            self?.fetchAndShowLocation()
-            completion()
-        }
-        let section = CPListSection(items: [item])
-        let template = CPListTemplate(title: "You Are Here", sections: [section])
-        self.listTemplate = template
-        ic?.setRootTemplate(template, animated: true, completion: nil)
+        uiState = .idle
     }
     
     func fetchAndShowLocation() {
-        print("[CarPlay] fetchAndShowLocation called")
-        print("[CarPlay] Requesting location authorization and location")
-        isLoading = true
-        updateListTemplate()
         speechCancelled = false
+        uiState = .gettingLocation
         locationManager.requestWhenInUseAuthorization()
         locationManager.requestLocation()
     }
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        print("[CarPlay] didUpdateLocations called with: \(locations)")
-        isLoading = false
         guard let loc = locations.last else { return }
         let geocoder = CLGeocoder()
         geocoder.reverseGeocodeLocation(loc) { [weak self] placemarks, error in
             guard let self = self else { return }
             if let error = error {
-                print("[CarPlay] Reverse geocoding failed: \(error)")
+                self.uiState = .error("Reverse geocoding failed: \(error.localizedDescription)")
+                return
             }
             if let placemark = placemarks?.first {
-                let place = [placemark.name, placemark.locality, placemark.country].compactMap { $0 }.joined(separator: ", ")
-                self.placeString = place
+                let areaOfInterest = placemark.areasOfInterest?.first
+                let locality = placemark.locality
+                let subLocality = placemark.subLocality
+                let state = placemark.administrativeArea
+                let country = placemark.country
+                let placeShort = [areaOfInterest, locality, subLocality, state, country].compactMap { $0 }.joined(separator: ", ")
+                self.currentPlace = placeShort
+                self.uiState = .gotLocation(placeShort)
                 self.fetchClaudeSummary(for: placemark)
-                print("[CarPlay] Placemark: \(self.placeString ?? "")")
             } else {
-                self.placeString = "No place yet."
-                print("[CarPlay] No placemark found")
+                self.uiState = .error("No place found")
             }
-            self.updateListTemplate()
         }
     }
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        print("[CarPlay] didFailWithError: \(error)")
-        isLoading = false
-        placeString = "No place yet."
-        updateListTemplate()
+        uiState = .error("Location error: \(error.localizedDescription)")
     }
     
     func fetchClaudeSummary(for placemark: CLPlacemark) {
-        isLoading = true
-        updateListTemplate(with: "Getting summary…")
-        let name = placemark.name ?? ""
-        let state = placemark.administrativeArea ?? ""
-        let country = placemark.country ?? ""
-        let placeShort = [name, state, country].filter { !$0.isEmpty }.joined(separator: ", ")
-        let prompt = "Tell me something interesting about \(placeShort)."
-        var request = URLRequest(url: claudeProxyURL)
+        guard let placeShort = currentPlace else { return }
+        self.uiState = .thinkingOfWhatToSay(placeShort)
+        let prompt = "You are an expert tour guide. Speak as an authority on the subject. Do not ask the user for clarifications or questions. Tell me something interesting about \(placeShort)."
+        var request = URLRequest(url: CarPlayContentView.claudeProxyURL)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue(claudeClientAPIKey, forHTTPHeaderField: "x-client-key")
@@ -106,13 +112,13 @@ class CarPlayContentView: NSObject, CLLocationManagerDelegate {
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
         URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
             DispatchQueue.main.async {
-                self?.isLoading = false
+                guard let self = self else { return }
                 if let error = error {
-                    self?.updateListTemplate(with: "Error: \(error.localizedDescription)")
+                    self.uiState = .error("Claude error: \(error.localizedDescription)")
                     return
                 }
                 guard let data = data else {
-                    self?.updateListTemplate(with: "No summary found.")
+                    self.uiState = .error("No summary found.")
                     return
                 }
                 var summary: String? = nil
@@ -122,18 +128,19 @@ class CarPlayContentView: NSObject, CLLocationManagerDelegate {
                    let s = firstContent["text"] as? String {
                     summary = s
                 }
-                if let summary = summary, self?.speechCancelled == false {
-                    self?.fetchAndPlayTTS(for: summary)
+                if let summary = summary, self.speechCancelled == false {
+                    self.fetchAndPlayTTS(for: summary)
                 } else {
-                    self?.updateListTemplate(with: "No summary found.")
+                    self.uiState = .error("No summary found.")
                 }
             }
         }.resume()
     }
     
     func fetchAndPlayTTS(for text: String) {
-        let ttsURL = URL(string: "https://claude-proxy-hgt1osfrv-gregs-projects-58823ca2.vercel.app/api/tts")!
-        var request = URLRequest(url: ttsURL)
+        guard let placeShort = currentPlace else { return }
+        self.uiState = .thinkingOfWhatToSay(placeShort)
+        var request = URLRequest(url: CarPlayContentView.ttsProxyURL)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         let body = ["text": text]
@@ -141,21 +148,24 @@ class CarPlayContentView: NSObject, CLLocationManagerDelegate {
         audioTask?.cancel()
         audioTask = URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
             DispatchQueue.main.async {
+                guard let self = self else { return }
                 if let error = error {
-                    self?.updateListTemplate(with: "TTS error: \(error.localizedDescription)")
+                    self.uiState = .error("TTS error: \(error.localizedDescription)")
                     return
                 }
                 guard let data = data else {
-                    self?.updateListTemplate(with: "No TTS audio.")
+                    self.uiState = .error("No TTS audio.")
                     return
                 }
                 do {
-                    self?.audioPlayer = try AVAudioPlayer(data: data)
-                    self?.audioPlayer?.delegate = self
-                    self?.isPlaying = true
-                    self?.audioPlayer?.play()
+                    self.audioPlayer = try AVAudioPlayer(data: data)
+                    self.audioPlayer?.delegate = self
+                    self.isPlaying = true
+                    self.startProgressTimer()
+                    self.uiState = .playingAudio(placeShort)
+                    self.audioPlayer?.play()
                 } catch {
-                    self?.updateListTemplate(with: "Audio playback error.")
+                    self.uiState = .error("Audio playback error.")
                 }
             }
         }
@@ -166,19 +176,75 @@ class CarPlayContentView: NSObject, CLLocationManagerDelegate {
         audioTask?.cancel()
         audioPlayer?.stop()
         isPlaying = false
-        updateListTemplate()
+        stopProgressTimer()
+        if let place = currentPlace {
+            uiState = .gotLocation(place)
+        } else {
+            uiState = .idle
+        }
     }
     
-    func updateListTemplate(with detailOverride: String? = nil) {
+    func startProgressTimer() {
+        stopProgressTimer()
+        progressTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+            self?.updateListTemplate()
+        }
+    }
+    
+    func stopProgressTimer() {
+        progressTimer?.invalidate()
+        progressTimer = nil
+    }
+    
+    func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+        isPlaying = false
+        stopProgressTimer()
+        if let place = currentPlace {
+            uiState = .gotLocation(place)
+        } else {
+            uiState = .idle
+        }
+    }
+    
+    func audioPlayerDecodeErrorDidOccur(_ player: AVAudioPlayer, error: Error?) {
+        isPlaying = false
+        stopProgressTimer()
+        if let place = currentPlace {
+            uiState = .gotLocation(place)
+        } else {
+            uiState = .idle
+        }
+    }
+    
+    func updateListTemplate() {
         guard let ic = ic else { return }
-        let detail = isLoading ? (detailOverride ?? "Getting location…") : nil
+        var detail: String? = nil
+        var items: [CPListItem] = []
+        switch uiState {
+        case .idle:
+            detail = nil
+        case .gettingLocation:
+            detail = "Getting location…"
+        case .gotLocation(let place):
+            detail = place
+        case .thinkingOfWhatToSay(let place):
+            detail = "Thinking of what to say about \(place)"
+        case .playingAudio(_):
+            if let player = audioPlayer, player.duration > 0 {
+                let percent = Int((player.currentTime / player.duration) * 100)
+                detail = "\(percent)%"
+            } else {
+                detail = nil
+            }
+        case .error(let msg):
+            detail = msg
+        }
         let getLocationItem = CPListItem(text: "Get Location", detailText: detail)
         getLocationItem.handler = { [weak self] _, completion in
-            print("[CarPlay] Get Location row tapped (updateListTemplate)")
             self?.fetchAndShowLocation()
             completion()
         }
-        var items = [getLocationItem]
+        items.append(getLocationItem)
         if isPlaying {
             let stopItem = CPListItem(text: "Stop", detailText: nil)
             stopItem.handler = { [weak self] _, completion in
@@ -192,16 +258,5 @@ class CarPlayContentView: NSObject, CLLocationManagerDelegate {
         let template = CPListTemplate(title: "You Are Here", sections: [section])
         self.listTemplate = template
         ic.setRootTemplate(template, animated: false, completion: nil)
-    }
-}
-
-extension CarPlayContentView: AVAudioPlayerDelegate {
-    func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
-        isPlaying = false
-        updateListTemplate()
-    }
-    func audioPlayerDecodeErrorDidOccur(_ player: AVAudioPlayer, error: Error?) {
-        isPlaying = false
-        updateListTemplate()
     }
 }

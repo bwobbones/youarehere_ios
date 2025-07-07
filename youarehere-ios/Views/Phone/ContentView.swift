@@ -8,6 +8,7 @@
 import SwiftUI
 import CoreLocation
 import AVFoundation
+import Foundation
 
 class IdentifiableError: Identifiable {
     let id = UUID()
@@ -15,20 +16,44 @@ class IdentifiableError: Identifiable {
     init(_ error: Error) { self.error = error }
 }
 
-let claudeProxyURL = URL(string: "https://claude-proxy-hfel3gev0-gregs-projects-58823ca2.vercel.app/api/claude")!
-let claudeClientAPIKey = "sumpleriltskin"
+// Helper to load config values from Config.plist
+func loadConfigValue(_ key: String) -> String {
+    guard let url = Bundle.main.url(forResource: "Config", withExtension: "plist"),
+          let data = try? Data(contentsOf: url),
+          let plist = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil) as? [String: Any],
+          let value = plist[key] as? String else {
+        fatalError("Missing or invalid Config.plist value for \(key)")
+    }
+    return value
+}
+
+private let proxyBaseURL = loadConfigValue("ProxyBaseURL")
+private let claudeProxyURL = URL(string: "\(proxyBaseURL)/api/claude")!
+private let ttsProxyURL = URL(string: "\(proxyBaseURL)/api/tts")!
+let claudeClientAPIKey = loadConfigValue("ClaudeClientAPIKey")
+
+enum PhoneUIState {
+    case idle
+    case gettingLocation
+    case gotLocation(String)
+    case thinkingOfWhatToSay(String)
+    case playingAudio(String)
+    case error(String)
+}
 
 class LocationManagerDelegateWrapper: NSObject, ObservableObject, CLLocationManagerDelegate {
     let locationManager = CLLocationManager()
     let audioPlayerDelegate = AudioPlayerDelegate()
     @Published var lastLocation: CLLocation?
     @Published var error: IdentifiableError?
-    @Published var placeString: String? = nil
     @Published var isLoading: Bool = false
     @Published var isPlaying: Bool = false
+    @Published var uiState: PhoneUIState = .idle
     var audioPlayer: AVAudioPlayer?
     var audioTask: URLSessionDataTask?
     var speechCancelled = false
+    var currentPlace: String? = nil
+    var progressTimer: Timer?
 
     override init() {
         super.init()
@@ -36,51 +61,45 @@ class LocationManagerDelegateWrapper: NSObject, ObservableObject, CLLocationMana
     }
 
     func requestLocation() {
-        isLoading = true
+        speechCancelled = false
+        uiState = .gettingLocation
         locationManager.requestWhenInUseAuthorization()
         locationManager.requestLocation()
     }
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        print("didUpdateLocations called with: \(locations)")
-        lastLocation = locations.last
-        if let loc = locations.last {
-            let geocoder = CLGeocoder()
-            geocoder.reverseGeocodeLocation(loc) { [weak self] placemarks, error in
-                guard let self = self else { return }
-                self.isLoading = false
-                if let error = error {
-                    print("Reverse geocoding failed: \(error)")
-                    return
-                }
-                if let placemark = placemarks?.first {
-                    let place = [placemark.name, placemark.locality, placemark.country].compactMap { $0 }.joined(separator: ", ")
-                    self.placeString = place
-                    self.fetchClaudeSummary(for: placemark)
-                } else {
-                    self.placeString = "No place yet."
-                    print("No placemark found")
-                }
+        guard let loc = locations.last else { return }
+        let geocoder = CLGeocoder()
+        geocoder.reverseGeocodeLocation(loc) { [weak self] placemarks, error in
+            guard let self = self else { return }
+            if let error = error {
+                self.uiState = .error("Reverse geocoding failed: \(error.localizedDescription)")
+                return
             }
-        } else {
-            isLoading = false
+            if let placemark = placemarks?.first {
+                let areaOfInterest = placemark.areasOfInterest?.first
+                let locality = placemark.locality
+                let subLocality = placemark.subLocality
+                let state = placemark.administrativeArea
+                let country = placemark.country
+                let placeShort = [areaOfInterest, locality, subLocality, state, country].compactMap { $0 }.joined(separator: ", ")
+                self.currentPlace = placeShort
+                self.uiState = .gotLocation(placeShort)
+                self.fetchClaudeSummary(for: placemark)
+            } else {
+                self.uiState = .error("No place found")
+            }
         }
     }
 
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        print("didFailWithError: \(error)")
-        self.error = IdentifiableError(error)
-        isLoading = false
+        self.uiState = .error("Location error: \(error.localizedDescription)")
     }
 
     func fetchClaudeSummary(for placemark: CLPlacemark) {
-        isLoading = true
-        self.placeString = "Getting summary…"
-        let name = placemark.name ?? ""
-        let state = placemark.administrativeArea ?? ""
-        let country = placemark.country ?? ""
-        let placeShort = [name, state, country].filter { !$0.isEmpty }.joined(separator: ", ")
-        let prompt = "Tell me something interesting about \(placeShort)."
+        guard let placeShort = currentPlace else { return }
+        self.uiState = .thinkingOfWhatToSay(placeShort)
+        let prompt = "You are an expert tour guide. Speak as an authority on the subject. Do not ask the user for clarifications or questions. Tell me something interesting about \(placeShort)."
         var request = URLRequest(url: claudeProxyURL)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -89,13 +108,13 @@ class LocationManagerDelegateWrapper: NSObject, ObservableObject, CLLocationMana
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
         URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
             DispatchQueue.main.async {
-                self?.isLoading = false
+                guard let self = self else { return }
                 if let error = error {
-                    self?.placeString = "Error: \(error.localizedDescription)"
+                    self.uiState = .error("Claude error: \(error.localizedDescription)")
                     return
                 }
                 guard let data = data else {
-                    self?.placeString = "No summary found."
+                    self.uiState = .error("No summary found.")
                     return
                 }
                 var summary: String? = nil
@@ -105,55 +124,53 @@ class LocationManagerDelegateWrapper: NSObject, ObservableObject, CLLocationMana
                    let s = firstContent["text"] as? String {
                     summary = s
                 }
-                if let summary = summary, self?.speechCancelled == false {
-                    self?.fetchAndPlayTTS(for: summary)
+                if let summary = summary, self.speechCancelled == false {
+                    self.fetchAndPlayTTS(for: summary)
                 } else {
-                    self?.placeString = "No summary found."
+                    self.uiState = .error("No summary found.")
                 }
             }
         }.resume()
     }
 
     func fetchAndPlayTTS(for text: String) {
-        let ttsURL = URL(string: "https://claude-proxy-hgt1osfrv-gregs-projects-58823ca2.vercel.app/api/tts")!
-        var request = URLRequest(url: ttsURL)
+        guard let placeShort = currentPlace else { return }
+        self.uiState = .thinkingOfWhatToSay(placeShort)
+        var request = URLRequest(url: ttsProxyURL)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         let body = ["text": text]
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
-        print("[TTS] Sending request for text: \(text.prefix(100))")
         audioTask?.cancel()
         audioTask = URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
             DispatchQueue.main.async {
+                guard let self = self else { return }
                 if let error = error {
-                    print("[TTS] Error: \(error)")
-                    self?.placeString = "TTS error: \(error.localizedDescription)"
+                    self.uiState = .error("TTS error: \(error.localizedDescription)")
                     return
-                }
-                if let httpResponse = response as? HTTPURLResponse {
-                    print("[TTS] HTTP status: \(httpResponse.statusCode)")
                 }
                 guard let data = data else {
-                    print("[TTS] No data received")
-                    self?.placeString = "No TTS audio."
+                    self.uiState = .error("No TTS audio.")
                     return
                 }
-                print("[TTS] First 100 bytes: \(String(data: data.prefix(100), encoding: .utf8) ?? "<binary>")")
-                print("[TTS] Received audio data, size: \(data.count) bytes")
                 do {
-                    self?.audioPlayer = try AVAudioPlayer(data: data)
-                    self?.audioPlayer?.delegate = self?.audioPlayerDelegate
-                    self?.audioPlayerDelegate.onFinish = { [weak self] in
-                        print("[TTS] Playback finished")
+                    self.audioPlayer = try AVAudioPlayer(data: data)
+                    self.audioPlayer?.delegate = self.audioPlayerDelegate
+                    self.audioPlayerDelegate.onFinish = { [weak self] in
                         self?.isPlaying = false
+                        self?.stopProgressTimer()
+                        if let place = self?.currentPlace {
+                            self?.uiState = .gotLocation(place)
+                        } else {
+                            self?.uiState = .idle
+                        }
                     }
-                    self?.isPlaying = true
-                    self?.placeString = "Playing audio…"
-                    print("[TTS] Starting playback")
-                    self?.audioPlayer?.play()
+                    self.isPlaying = true
+                    self.startProgressTimer()
+                    self.uiState = .playingAudio(placeShort)
+                    self.audioPlayer?.play()
                 } catch {
-                    print("[TTS] Audio playback error: \(error)")
-                    self?.placeString = "Audio playback error."
+                    self.uiState = .error("Audio playback error.")
                 }
             }
         }
@@ -164,6 +181,24 @@ class LocationManagerDelegateWrapper: NSObject, ObservableObject, CLLocationMana
         audioTask?.cancel()
         audioPlayer?.stop()
         isPlaying = false
+        stopProgressTimer()
+        if let place = currentPlace {
+            uiState = .gotLocation(place)
+        } else {
+            uiState = .idle
+        }
+    }
+
+    func startProgressTimer() {
+        stopProgressTimer()
+        progressTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+            self?.objectWillChange.send()
+        }
+    }
+
+    func stopProgressTimer() {
+        progressTimer?.invalidate()
+        progressTimer = nil
     }
 }
 
@@ -199,11 +234,7 @@ struct ContentView: View {
                 ProgressView()
                     .padding()
             }
-            if let status = locationManagerDelegate.placeString, !status.isEmpty {
-                Text(status)
-                    .font(.title2)
-                    .padding()
-            }
+            statusView
             if locationManagerDelegate.isPlaying {
                 Button(action: {
                     locationManagerDelegate.speechCancelled = true
@@ -226,6 +257,39 @@ struct ContentView: View {
         }
         .alert(item: $locationManagerDelegate.error) { err in
             Alert(title: Text("Location Error"), message: Text(err.error.localizedDescription), dismissButton: .default(Text("OK")))
+        }
+    }
+    
+    @ViewBuilder
+    var statusView: some View {
+        switch locationManagerDelegate.uiState {
+        case .idle:
+            EmptyView()
+        case .gettingLocation:
+            Text("Getting location…")
+                .font(.title2)
+                .padding()
+        case .gotLocation(let place):
+            Text(place)
+                .font(.title2)
+                .padding()
+        case .thinkingOfWhatToSay(let place):
+            Text("Thinking of what to say about \(place)")
+                .font(.title2)
+                .padding()
+        case .playingAudio(_):
+            if let player = locationManagerDelegate.audioPlayer, player.duration > 0 {
+                let percent = Int((player.currentTime / player.duration) * 100)
+                Text("\(percent)%")
+                    .font(.title2)
+                    .padding()
+            } else {
+                EmptyView()
+            }
+        case .error(let msg):
+            Text(msg)
+                .font(.title2)
+                .padding()
         }
     }
 }
