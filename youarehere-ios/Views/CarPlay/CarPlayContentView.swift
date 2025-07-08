@@ -100,17 +100,17 @@ class CarPlayContentView: NSObject, CLLocationManagerDelegate, AVAudioPlayerDele
     }
     
     func fetchAndShowLocation(isTimer: Bool = false) {
+        // On timer refresh, if the location hasn't changed and has already been played, show 'Still in <location>' and do nothing else
+        if isTimer, let place = currentPlace, playedLocations.contains(place) {
+            justPlayedLocation = nil
+            stillInLocation = place
+            updateListTemplate()
+            return
+        }
         speechCancelled = false
         uiState = .gettingLocation
         locationManager.requestWhenInUseAuthorization()
         locationManager.requestLocation()
-        // If this is a timer-based refresh, block replay if already played
-        if isTimer, let place = currentPlace, playedLocations.contains(place) {
-            justPlayedLocation = place
-            stillInLocation = nil
-            updateListTemplate()
-            return
-        }
         justPlayedLocation = nil
     }
     
@@ -149,7 +149,7 @@ class CarPlayContentView: NSObject, CLLocationManagerDelegate, AVAudioPlayerDele
     func fetchClaudeSummary(for placemark: CLPlacemark) {
         guard let placeShort = currentPlace else { return }
         self.uiState = .thinkingOfWhatToSay(placeShort)
-        let prompt = "You are an expert tour guide. Speak as an authority on the subject. Do not ask the user for clarifications or questions. Tell me something interesting about \(placeShort)."
+        let prompt = "You are an expert tour guide. For the location \(placeShort), always start with 'Welcome to \(placeShort)'. In a conversational style, tell me (if available): 1. Ancient history of the location, 2. Modern history of the location, 3. A cool fact about it, 4. A hidden fact I might not know, and 5. A famous person from the location. Do not read or say the numbers or headings, just weave the information naturally into your speech."
         var request = URLRequest(url: CarPlayContentView.claudeProxyURL)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
