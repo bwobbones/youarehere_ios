@@ -149,7 +149,7 @@ class CarPlayContentView: NSObject, CLLocationManagerDelegate, AVAudioPlayerDele
     func fetchClaudeSummary(for placemark: CLPlacemark) {
         guard let placeShort = currentPlace else { return }
         self.uiState = .thinkingOfWhatToSay(placeShort)
-        let prompt = "You are an expert tour guide. For the location \(placeShort), always start with 'Welcome to \(placeShort)'. In a conversational style, tell me (if available): 1. Ancient history of the location, 2. Modern history of the location, 3. A cool fact about it, 4. A hidden fact I might not know, and 5. A famous person from the location. Do not read or say the numbers or headings, just weave the information naturally into your speech."
+        let prompt = "You are an expert tour guide. For the location \(placeShort), always start with 'Welcome to \(placeShort)'. If available, immediately after the welcome, tell me the population count. Then, in a conversational style, tell me (if available): 1. Ancient history of the location, 2. Modern history of the location, 3. A recent event in the location, 4. A cool fact about it, 5. A hidden fact I might not know, 6. The best thing to do or visit in the location, and 7. A famous person from the location. Do not read or say the numbers or headings, just weave the information naturally into your speech. If you can't find anything for one of these items, just skip it."
         var request = URLRequest(url: CarPlayContentView.claudeProxyURL)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
